@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Image Compressor</title>
+</head>
+<body>
+    <h2>🔐 Compress and Encrypt Image</h2>
+    <form action="/compress" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" required><br>
+        <input type="password" name="password" placeholder="Enter password" required><br>
+        <input type="submit" value="Compress + Encrypt">
+    </form>
+
+    <h2>🔓 Decrypt and Decompress Image</h2>
+    <form action="/decompress" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required><br>
+        <input type="password" name="password" placeholder="Enter password" required><br>
+        <input type="submit" value="Decrypt + Decompress">
+    </form>
+</body>
+</html>
