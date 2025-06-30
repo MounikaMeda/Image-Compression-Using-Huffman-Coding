@@ -1,21 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Image Compressor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <h2>🔐 Compress and Encrypt Image</h2>
-    <form action="/compress" method="post" enctype="multipart/form-data">
-        <input type="file" name="image" required><br>
-        <input type="password" name="password" placeholder="Enter password" required><br>
-        <input type="submit" value="Compress + Encrypt">
-    </form>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-shield-alt"></i> Secure Image Compressor</h1>
+            <p class="subtitle">Advanced compression with encryption & digital signatures</p>
+        </header>
 
-    <h2>🔓 Decrypt and Decompress Image</h2>
-    <form action="/decompress" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required><br>
-        <input type="password" name="password" placeholder="Enter password" required><br>
-        <input type="submit" value="Decrypt + Decompress">
-    </form>
+        <div class="security-badges">
+            <span class="badge"><i class="fas fa-compress-alt"></i> Huffman</span>
+            <span class="badge"><i class="fas fa-lock"></i> Encrypted</span>
+            <span class="badge"><i class="fas fa-signature"></i> Signed</span>
+            <span class="badge"><i class="fas fa-check-circle"></i> Verified</span>
+        </div>
+
+        <div class="forms-container">
+            <!-- Compress Section -->
+            <div class="form-card">
+                <h2><i class="fas fa-shield-alt"></i> Compress & Secure Image</h2>
+                <form id="compressForm" action="/compress" method="post" enctype="multipart/form-data">
+                    <div class="file-input-container">
+                        <label for="imageInput" class="file-label">
+                            <i class="fas fa-image"></i>
+                            <span class="file-text">Choose Image File</span>
+                            <span class="file-name" id="imageFileName"></span>
+                        </label>
+                        <input type="file" id="imageInput" name="image" accept="image/*" required>
+                    </div>
+                    
+                    <div class="password-container">
+                        <input type="password" id="compressPassword" name="password" placeholder="Enter secure password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('compressPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength" id="passwordStrength"></div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="btn-text">Compress + Encrypt</span>
+                        <div class="loading-spinner"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Decrypt Section -->
+            <div class="form-card">
+                <h2><i class="fas fa-unlock-alt"></i> Decrypt & Extract Image</h2>
+                <form id="decompressForm" action="/decompress" method="post" enctype="multipart/form-data">
+                    <div class="file-input-container">
+                        <label for="fileInput" class="file-label">
+                            <i class="fas fa-file-archive"></i>
+                            <span class="file-text">Choose .huffimg File</span>
+                            <span class="file-name" id="fileFileName"></span>
+                        </label>
+                        <input type="file" id="fileInput" name="file" accept=".huffimg" required>
+                    </div>
+                    
+                    <div class="password-container">
+                        <input type="password" id="decompressPassword" name="password" placeholder="Enter password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('decompressPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-unlock-alt"></i>
+                        <span class="btn-text">Decrypt + Extract</span>
+                        <div class="loading-spinner"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3><i class="fas fa-info-circle"></i> Security Features</h3>
+            <div class="features-grid">
+                <div class="feature">
+                    <i class="fas fa-compress-alt"></i>
+                    <h4>Huffman Compression</h4>
+                    <p>Lossless data compression algorithm</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-lock"></i>
+                    <h4>Password Encryption</h4>
+                    <p>AES encryption with user password</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-signature"></i>
+                    <h4>Digital Signature</h4>
+                    <p>RSA signature for authenticity</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-check-circle"></i>
+                    <h4>Integrity Check</h4>
+                    <p>SHA-256 hash verification</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='secure-image-compressor\script.js') }}"></script>
 </body>
 </html>

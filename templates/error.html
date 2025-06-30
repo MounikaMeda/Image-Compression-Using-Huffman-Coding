@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <style>
+        body {
+            background-color: #fff8f8;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 40px;
+            color: #880000;
+        }
+        .error-container {
+            background-color: #ffe6e6;
+            border: 2px solid #ff4d4d;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #cc0000;
+        }
+        ul {
+            margin-top: 10px;
+        }
+        a {
+            color: #004080;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>{{ title }}</h1>
+        <p>{{ message | safe }}</p>
+        <a href="/">← Go Back</a>
+    </div>
+</body>
+</html>

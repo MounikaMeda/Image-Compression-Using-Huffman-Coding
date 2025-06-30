@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request, send_file, redirect
+from flask import Flask, render_template, request, send_file
 import os
 from compression.huffman import compress, decompress
 from compression.encryption import encrypt_data, decrypt_data
 from compression.signature import sign_data, verify_signature
 import pickle
 import traceback
+import hashlib
+from PIL import Image
+import io
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
@@ -20,34 +23,32 @@ def compress_route():
     password = request.form['password']
 
     if image and password:
-        img_data = image.read()
+        try:
+            img_data = image.read()
 
-        # Huffman compression
-        compressed_data, codes = compress(img_data)
+            compressed_data, codes = compress(img_data)
+            data_hash = hashlib.sha256(compressed_data).hexdigest()
+            signature = sign_data(compressed_data, os.path.join(KEYS_FOLDER, "private_key.pem"))
 
-        # Signature before encryption
-        signature = sign_data(compressed_data, os.path.join(KEYS_FOLDER, "private_key.pem"))
+            package = {
+                'compressed_data': compressed_data,
+                'codes': codes,
+                'signature': signature,
+                'data_hash': data_hash
+            }
 
-        # Pack everything using pickle
-        package = {
-            'compressed_data': compressed_data,
-            'codes': codes,
-            'signature': signature
-        }
+            pickled_package = pickle.dumps(package)
+            encrypted_package = encrypt_data(pickled_package, password)
 
-        pickled_package = pickle.dumps(package)
+            out_path = os.path.join(UPLOAD_FOLDER, "compressed.huffimg")
+            with open(out_path, "wb") as f:
+                f.write(encrypted_package)
 
-        # Encrypt it
-        encrypted_package = encrypt_data(pickled_package, password)
+            return send_file(out_path, as_attachment=True)
+        except Exception as e:
+            return render_template("error.html", title="Compression Error", message=str(e))
 
-        # Save encrypted file
-        out_path = os.path.join(UPLOAD_FOLDER, "compressed.huffimg")
-        with open(out_path, "wb") as f:
-            f.write(encrypted_package)
-
-        return send_file(out_path, as_attachment=True)
-
-    return "❌ Missing file or password."
+    return render_template("error.html", title="Input Error", message="Missing image or password.")
 
 @app.route('/decompress', methods=['POST'])
 def decompress_route():
@@ -58,34 +59,54 @@ def decompress_route():
         try:
             encrypted_data = file.read()
 
-            # Decrypt
-            decrypted_data = decrypt_data(encrypted_data, password)
+            try:
+                decrypted_data = decrypt_data(encrypted_data, password)
+            except Exception as decrypt_error:
+                return render_template("error.html", title="Decryption Failed", message="""
+                    Possible reasons:
+                    <ul>
+                        <li>✗ Wrong password</li>
+                        <li>✗ File was tampered or corrupted</li>
+                        <li>✗ Not a valid encrypted file</li>
+                    </ul>
+                """)
 
-            # Load from pickle
-            package = pickle.loads(decrypted_data)
-            compressed_data = package['compressed_data']
-            codes = package['codes']
-            signature = package['signature']
+            try:
+                package = pickle.loads(decrypted_data)
+                compressed_data = package['compressed_data']
+                codes = package['codes']
+                signature = package['signature']
+                stored_hash = package['data_hash']
+            except Exception:
+                return render_template("error.html", title="Invalid Format", message="This file is not a valid compressed image package.")
 
-            # Verify signature
+            current_hash = hashlib.sha256(compressed_data).hexdigest()
+            if current_hash != stored_hash:
+                return render_template("error.html", title="Integrity Check Failed", message="SHA-256 hash mismatch detected. File may be tampered or corrupted.")
+
             if not verify_signature(compressed_data, signature, os.path.join(KEYS_FOLDER, "public_key.pem")):
-                return "❌ Signature verification failed!"
+                return render_template("error.html", title="Signature Verification Failed", message="Invalid digital signature. The file may not be from the original sender.")
 
-            # Decompress
             decompressed_data = decompress(compressed_data, codes)
 
-            # Save result
-            out_path = os.path.join(UPLOAD_FOLDER, "decompressed.png")
+            img = Image.open(io.BytesIO(decompressed_data))
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+
+            output = io.BytesIO()
+            img.save(output, format='JPEG', quality=60, optimize=True)
+
+            out_path = os.path.join(UPLOAD_FOLDER, "compressed_output.jpg")
             with open(out_path, "wb") as f:
-                f.write(decompressed_data)
+                f.write(output.getvalue())
 
             return send_file(out_path, as_attachment=True)
 
         except Exception as e:
-            return f"❌ Error: {str(e)}<br><pre>{traceback.format_exc()}</pre>"
+            return render_template("error.html", title="Processing Error", message=str(e))
 
-    return "❌ Missing file or password."
-    
+    return render_template("error.html", title="Input Error", message="Missing file or password.")
+
 if __name__ == '__main__':
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     app.run(debug=True)
