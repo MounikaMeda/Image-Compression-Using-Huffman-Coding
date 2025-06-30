@@ -107,6 +107,64 @@ def decompress_route():
 
     return render_template("error.html", title="Input Error", message="Missing file or password.")
 
+@app.route('/decompress_only', methods=['POST'])
+def decompress_only_route():
+    file = request.files['file']
+    password = request.form['password']
+
+    if file and password:
+        try:
+            encrypted_data = file.read()
+
+            try:
+                decrypted_data = decrypt_data(encrypted_data, password)
+            except Exception as decrypt_error:
+                return render_template("error.html", title="Decryption Failed", message="""
+                    Possible reasons:
+                    <ul>
+                        <li>✗ Wrong password</li>
+                        <li>✗ File was tampered or corrupted</li>
+                        <li>✗ Not a valid encrypted file</li>
+                    </ul>
+                """)
+
+            try:
+                package = pickle.loads(decrypted_data)
+                compressed_data = package['compressed_data']
+                codes = package['codes']
+                # Note: We skip signature and hash verification in this route
+            except Exception:
+                return render_template("error.html", title="Invalid Format", message="This file is not a valid compressed image package.")
+
+            # Decompress the data to get original raw image bytes
+            decompressed_data = decompress(compressed_data, codes)
+
+            # Detect file extension from original data
+            img = Image.open(io.BytesIO(decompressed_data))
+            original_format = img.format or 'PNG'
+            
+            format_extensions = {
+                'JPEG': 'jpg',
+                'PNG': 'png', 
+                'BMP': 'bmp',
+                'TIFF': 'tiff',
+                'GIF': 'gif',
+                'WEBP': 'webp'
+            }
+            file_ext = format_extensions.get(original_format, 'png')
+            
+            # Save the raw decompressed data directly (exact original bytes)
+            out_path = os.path.join(UPLOAD_FOLDER, f"original_restored.{file_ext}")
+            with open(out_path, "wb") as f:
+                f.write(decompressed_data)
+
+            return send_file(out_path, as_attachment=True)
+
+        except Exception as e:
+            return render_template("error.html", title="Processing Error", message=str(e))
+
+    return render_template("error.html", title="Input Error", message="Missing file or password.")
+
 if __name__ == '__main__':
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     app.run(debug=True)

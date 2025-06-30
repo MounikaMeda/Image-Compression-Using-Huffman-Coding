@@ -51,7 +51,7 @@
                 </form>
             </div>
 
-            <!-- Decrypt Section -->
+            <!-- Decrypt & Extract Section -->
             <div class="form-card">
                 <h2><i class="fas fa-unlock-alt"></i> Decrypt & Extract Image</h2>
                 <form id="decompressForm" action="/decompress" method="post" enctype="multipart/form-data">
@@ -74,6 +74,38 @@
                     <button type="submit" class="btn btn-secondary">
                         <i class="fas fa-unlock-alt"></i>
                         <span class="btn-text">Decrypt + Extract</span>
+                        <div class="loading-spinner"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- NEW: Decrypt & Decompress Section -->
+            <div class="form-card">
+                <h2><i class="fas fa-expand-arrows-alt"></i> Decrypt & Decompress to Original</h2>
+                <div style="background: #e8f4fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;">
+                    <i class="fas fa-info-circle" style="color: #0066cc;"></i> 
+                    This option restores the image to its original format and quality
+                </div>
+                <form id="decompressOnlyForm" action="/decompress_only" method="post" enctype="multipart/form-data">
+                    <div class="file-input-container">
+                        <label for="fileInputOnly" class="file-label">
+                            <i class="fas fa-file-archive"></i>
+                            <span class="file-text">Choose .huffimg File</span>
+                            <span class="file-name" id="fileFileNameOnly"></span>
+                        </label>
+                        <input type="file" id="fileInputOnly" name="file" accept=".huffimg" required>
+                    </div>
+                    
+                    <div class="password-container">
+                        <input type="password" id="decompressOnlyPassword" name="password" placeholder="Enter password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('decompressOnlyPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="btn" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                        <span class="btn-text">Restore Original Image</span>
                         <div class="loading-spinner"></div>
                     </button>
                 </form>
@@ -107,6 +139,13 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='secure-image-compressor\script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // Add file name display for the new section
+        document.getElementById('fileInputOnly').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('fileFileNameOnly').textContent = fileName;
+        });
+    </script>
 </body>
 </html>
